@@ -1,1 +1,12 @@
+# Environment Variables
 *.env
+.venv
+
+# Files
+client_secret.json
+gmail_token.json
+
+# .idea Folder
+.idea
+
+

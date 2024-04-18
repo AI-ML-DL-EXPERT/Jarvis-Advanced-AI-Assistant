@@ -22,6 +22,9 @@ import re
 from datetime import timedelta
 from dotenv import load_dotenv
 
+# Email Library Dependencies
+from simplegmail import Gmail
+
 """
 Functionalities in my AI:
 
@@ -56,7 +59,8 @@ Future Features:
 # Takes Input from the User and returns the output in a string
 def TakeCommand():
     """
-    TakeCommand Function listens to the user input and returns that command in text.
+        Listens for user input and returns the recognized text as a string.
+        Handles potential errors and prompts the user to speak again if necessary.
     """
     # Initializing the speech recognition Recognizer and the Microphone
     recognizer = sr.Recognizer()
@@ -65,10 +69,10 @@ def TakeCommand():
     with microphone as source:
         print("Listening...")
 
-        # Adjusts the energy threshold dynamically using audio from ``source`` to account for Ambient Noise.
+        # Adjusts the energy threshold dynamically using audio from the source to account for Ambient Noise.
         recognizer.adjust_for_ambient_noise(source)
 
-        # If the user takes a pause of 1 Second then it will stop listening.
+        # If the user takes a pause of 1 Second, then it will stop listening.
         recognizer.pause_threshold = 1
 
         # Audio variable stores the input said by the user, as an AudioData object.
@@ -76,16 +80,16 @@ def TakeCommand():
 
         try:
             print("Recognizing...")
-            # Here instead of using recognize_google we can also use google.recognize_legacy
+            # Here instead of using recognize_google, we can also use google.recognize_legacy
             # function as internally recognizer.recognize_google uses google.recognize_legacy
             # function.
-            # recognize_google converts the input audio data into a string format in Indian English format.
+            # Recognize_google converts the input audio data into a string format in Indian English format.
             user_text_input = recognizer.recognize_google(audio, language="en-in")
             print("User said: ", user_text_input)
             return user_text_input
 
         except Exception as e:
-            # If some error occurs during hearing the Command then this block of code will run so, that the program
+            # If some error occurs during hearing the Command, then this block of code will run so, that the program
             # won't get terminated
             print("Say that again Please")
             return "None"
@@ -124,7 +128,7 @@ def WishMessage():
     currentTimeNow = datetime.datetime.now().hour
 
     if currentTimeNow < 12:
-        return "Good Evening Boss"
+        return "Good Morning Boss"
 
     elif currentTimeNow < 15:
         return "Good Afternoon Boss"
@@ -148,10 +152,10 @@ def RandomJoke():
 
 # Searching On Google
 def search_on_google(query):
-    """Opens Google search results for the provided query in the default browser.
-
-  Logs an informative message if the operation is successful or encounters an error.
-  """
+    """
+        Opens Google search results for the provided query in the default browser.
+        Logs an informative message if the operation is successful or encounters an error.
+    """
 
     searchURL = f"https://www.google.com/search?q={query}"  # Construct search URL
     try:
@@ -161,13 +165,13 @@ def search_on_google(query):
         logging.error(f"Failed to open Google search: {e}")
 
 
-# Loading the.env file where the api file is stored ( Use your own API key )
+# Loading the.env file where the api file is stored (Use your own API key)
 load_dotenv("YOUTUBE_DATA_API_KEY.env")
 
 # Getting the api key from the environment variable
 API_KEY = os.getenv("YOUTUBE_DATA_API_KEY")
 
-# Setting the Instance of the build class of googleapiclient library
+# Setting the Instance of the build class of a googleapiclient library
 youtube = build("youtube", "v3", developerKey=API_KEY)
 
 
@@ -210,6 +214,7 @@ def fetching_video_details(lst_of_video_ids):
     return vid_response
 
 
+# Open Instagram in the default browser
 def open_instagram():
     """Opens Instagram in the default browser.
     Logs an informative message if the operation is successful or encounters an error.
@@ -222,6 +227,7 @@ def open_instagram():
         logging.error(f"Failed to open Instagram: {e}")
 
 
+# Open Twitter in the default browser
 def open_twitter():
     """Opens Twitter in the default browser.
     Logs an informative message if the operation is successful or encounters an error.
@@ -242,7 +248,8 @@ def get_wikipedia_introduction(search_term, sentences=2):
 
   Args:
       search_term (str): The topic to search for on Wikipedia.
-      sentences (int, optional): The number of sentences for the summary. Defaults to 2.
+      Sentences(int, optional): The number of sentences for the summary.
+      Default to 2.
 
   Returns:
       str: The retrieved summary of the search term or an informative error message.
@@ -264,6 +271,7 @@ def get_wikipedia_introduction(search_term, sentences=2):
         return f"An error occurred while retrieving information for '{search_term}'"
 
 
+# Open GitHub in the default browser
 def open_github():
     """Opens GitHub in the default browser.
     Logs an informative message if the operation is successful or encounters an error.
@@ -276,8 +284,36 @@ def open_github():
         logging.error(f"Failed to open GitHub: {e}")
 
 
+# Setting an instance variable for Gmail class
+gmail = Gmail()
+
+
+# Send an Email
+def send_mail(to, subject, message):
+    """
+    Send an email using Gmail.
+    :param to: The email address to send
+    :param subject: Subject of the email
+    :param message: Message for the email
+    :return: Param (Dictionary of parameters to send to the instance of gmail class)
+    """
+
+    # Sending an email
+    params = {
+        "to": to,
+        "sender": "noname7231236@gmail.com",
+        "subject": subject,
+        "msg_html": f"<p>{message}</p>",
+        "msg_plain": message,
+        "signature": True  # use my account signature
+    }
+
+    return params
+
+
 if __name__ == '__main__':
     Speak(WishMessage())
+    Speak("How can I help you")
 
     while True:
         user_input = TakeCommand().lower()
@@ -327,7 +363,7 @@ if __name__ == '__main__':
 
             # Tell you the Joke on any topic you want to hear the joke
             elif "joke" in user_input and "topic" in user_input:
-                # Taking input from the user, asking him on which topic he wants to hear the joke
+                # Taking input from the user, asking him on which topic, he wants to hear the joke
                 Speak("On which topic you want to hear the joke about")
                 jokeTopic = TakeCommand().lower()
                 print(f"Joke Topic: {jokeTopic}")
@@ -338,7 +374,7 @@ if __name__ == '__main__':
                 response = requests.get(url, headers=headers)
                 response = response.json()
 
-                # Checking if the joke is there about a certain topic is there or not, if not then try another topic
+                # Checking if the joke is there about a certain topic is there or not, if not, then try another topic
                 if len(response["results"]) == 0:
                     print("No Jokes found for this topic, please search for another topic")
                     Speak("No Jokes found for this topic, please search for another topic")
@@ -394,7 +430,7 @@ if __name__ == '__main__':
                     # Hitting the request to fetch the details of every video present in the playlist.
                     vid_response = fetching_video_details(video_ids)
 
-                    # Storing the list of all the videos details
+                    # Storing the list of all the video details
                     lst_of_vid_details = vid_response["items"]
 
                     # List to store Number of likes on each video
@@ -406,7 +442,7 @@ if __name__ == '__main__':
 
                     # print(vid_likes)
 
-                    # Setting the index of the highest number of like on the video to 0
+                    # Setting the index of the highest number of likes on the video to 0
                     idx_with_highest_likes = 0
 
                     # Iterating through every value of the vid_likes list to get the index of the video with the highest
@@ -471,9 +507,30 @@ if __name__ == '__main__':
                 print("Output:- ", get_wikipedia_introduction(user_input, sentences=2))
                 Speak(get_wikipedia_introduction(user_input, sentences=2))
 
+            # Sending a Gmail
+            elif "send mail" in user_input or "send gmail" in user_input or "send email" in user_input:
+                Speak("Enter the Email Address to whom you want to send the Email")
+                to = input("To: ")
+
+                Speak("What is the Subject of the Email")
+                subject = TakeCommand().lower()
+                print("Subject of the Email: ", subject)
+
+                Speak("What is the Message of the Email")
+                message = TakeCommand().lower()
+                print("Subject of the Email: ", message)
+
+                # Calling send_mail function to get the Parameters of the Email
+                params = send_mail(to=to, subject=subject, message=message)
+
+                # Sending the message
+                email = gmail.send_message(**params)  # equivalent to send_message(to="you@youremail.com", sender=...)
+
+                Speak("Message Sent")
+
             elif "reminders" in user_input:
                 pass
 
-        # If any error occurred then print this error message, and say the command again.
+        # If any error occurred, then print this error message, and say the command again.
         except Exception as e:
             print("Say it again please! An Error has occurred")
