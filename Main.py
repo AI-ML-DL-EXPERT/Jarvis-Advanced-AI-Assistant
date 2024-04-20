@@ -17,13 +17,13 @@ import wikipedia
 
 # YouTube Data API Dependencies
 from googleapiclient.discovery import build
-from pprint import pprint
-import re
-from datetime import timedelta
 from dotenv import load_dotenv
 
 # Email Library Dependencies
 from simplegmail import Gmail
+
+# Google Tasks API Dependencies
+from PracticeCodes import tasks_api_functions
 
 """
 Functionalities in my AI:
@@ -311,6 +311,17 @@ def send_mail(to, subject, message):
     return params
 
 
+def add_a_task(tasks_api_instance, tasklist_title="Jarvis AI Assistant Tasks"):
+    # Calling the function to add a task
+    task_lists_dict = tasks_api_functions.get_task_lists(tasks_api_instance)
+    print("What do you want to add: ")
+    Speak("What do you want to add")
+    # Taking the input from user
+    task_title = TakeCommand()
+    tasks_api_functions.add_new_task(tasks, task_lists_dict[tasklist_title], task_title)
+    Speak("Task Added Successfully")
+
+
 if __name__ == '__main__':
     Speak(WishMessage())
     Speak("How can I help you")
@@ -325,11 +336,11 @@ if __name__ == '__main__':
                 print(f"\nBoss the time is: {currentTime}")
                 Speak(f"Boss the time is: {currentTime}")
 
-            # Tell you the Current Date
-            elif "date" in user_input:
-                date = datetime.datetime.now().date().strftime("%A, %d %B %Y")
-                print(f"\nBoss the date is: {date}")
-                Speak(f"Boss the date is: {date}")
+            # # Tell you the Current Date
+            # elif "date" in user_input:
+            #     date = datetime.datetime.now().date().strftime("%A, %d %B %Y")
+            #     print(f"\nBoss the date is: {date}")
+            #     Speak(f"Boss the date is: {date}")
 
             # Who Made this AI
             elif "who made you" in user_input or "who is your boss" in user_input or "who developed you" in user_input:
@@ -528,9 +539,105 @@ if __name__ == '__main__':
 
                 Speak("Message Sent")
 
+            # Adding a task
+            elif "add a task" in user_input or "add task" in user_input:
+                print("Do you want to add the task in default tasklist or Create a new tasklist? \n"
+                      "Yes or No?")
+
+                Speak("Do you want to add the task in default tasklist or create a new tasklist? Yes or No?")
+                user_input = TakeCommand().lower()
+
+                # Initializing the Google Tasks API
+                credentials = tasks_api_functions.get_credentials()
+                tasks = tasks_api_functions.get_service(credentials)
+
+                # If the User Says Yes or Default, then add the task in the default tasklist
+                if "yes" in user_input or "default" in user_input:
+                    # Adding the task in the default tasklist
+                    add_a_task(tasks)
+
+                else:
+                    # If the User Says No, then create a new tasklist
+                    print("What do you want to name the tasklist: ")
+                    Speak("What do you want to name the tasklist")
+                    task_list_title = TakeCommand().lower()
+
+                    # Calling the function to create a new tasklist
+                    task_lists = tasks_api_functions.get_task_lists(tasks)
+                    new_tasklist_output = tasks_api_functions.add_new_tasklist(tasks, task_list_title, **task_lists)
+
+                    # Updating the tasklist
+                    task_lists = tasks_api_functions.get_task_lists(tasks)
+
+                    if new_tasklist_output is None:
+                        print("Tasklist Already Exists")
+                        Speak("Tasklist Already Exists")
+
+                    elif task_list_title is None:
+                        print("Nothing to add")
+                        Speak("Nothing to add")
+
+                    else:
+                        print("Tasklist Created Successfully")
+                        Speak("Tasklist Created Successfully")
+
+                        # Adding the Task
+                        add_a_task(tasks, task_list_title)
+
+            # Mark a task as done
+            elif ("mark" in user_input  and "task" in user_input) or "mark task as done" in user_input:
+                # Initializing the Google Tasks API
+                credentials = tasks_api_functions.get_credentials()
+                tasks = tasks_api_functions.get_service(credentials)
+
+                # List of Task lists
+                tasklists = tasks_api_functions.get_task_lists(tasks)
+
+                print("Task list Title: ")
+                Speak("What is the Name of the tasklist")
+
+                # Checking from which Task lists user wants to update the tasks
+                task_lists_title = TakeCommand().lower()
+
+                # Checking if the Tasklist exists in the TaskLists
+                if task_lists_title in tasklists.keys():
+
+                    # List of tasks in a TaskList
+                    tasks_list = tasks_api_functions.get_tasks(tasks, tasklists[task_lists_title])
+
+                    # Which task you want to update
+                    print("Which task do you want to update?")
+                    Speak("Which task do you want to update?")
+                    task_title = TakeCommand().lower()
+
+                    # Checking if the Task exists in the TaskList
+                    for task in tasks_list:
+                        if task_title == task["title"]:
+                            # Updating the Task
+                            tasks_api_functions.task_mark_as_done(tasks, task_id=task["id"],
+                                                                  tasklist_id=tasklists[task_lists_title])
+                            Speak("Task Updated Successfully")
+
+                else:
+                    print("Task does not exist")
+                    Speak("Task does not exist")
+
+            # Reminders Functionalities
             elif "reminders" in user_input:
                 pass
 
-        # If any error occurred, then print this error message, and say the command again.
+            # Exiting the program
+            elif "exit" in user_input or "quit" in user_input:
+                print("Exiting the Assistant Boss")
+                Speak("Exiting the Assistant Boss")
+                exit(0)
+
+            # If any other command is entered, then print this message, and say the command again.
+            else:
+                print("Say it again please!")
+                continue
+
+                # If any error occurred, then print this error message, and say the command again.
+
         except Exception as e:
             print("Say it again please! An Error has occurred")

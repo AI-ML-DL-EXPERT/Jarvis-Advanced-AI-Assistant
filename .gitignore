@@ -4,7 +4,12 @@
 
 # Files
 client_secret.json
+client_secret_tasks_api.json
+calender_client_secret.json
+client_secret_gemini_api.json
 gmail_token.json
+token.pickle
+*.pickle
 
 # .idea Folder
 .idea
